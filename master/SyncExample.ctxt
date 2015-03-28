@@ -1,0 +1,26 @@
+#BlueJ class context
+comment0.params=face
+comment0.target=SyncExample(net.named_data.jndn.Face)
+comment1.params=
+comment1.target=void\ publish()
+comment10.params=e
+comment10.target=void\ changedUpdate(javax.swing.event.DocumentEvent)
+comment11.params=argv
+comment11.target=void\ main(java.lang.String[])
+comment2.params=interest\ data
+comment2.target=void\ onData(net.named_data.jndn.Interest,\ net.named_data.jndn.Data)
+comment3.params=interest
+comment3.target=void\ onTimeout(net.named_data.jndn.Interest)
+comment4.params=prefix\ interest\ transport\ registeredPrefixId
+comment4.target=void\ onInterest(net.named_data.jndn.Name,\ net.named_data.jndn.Interest,\ net.named_data.jndn.transport.Transport,\ long)
+comment5.params=
+comment5.target=void\ onInitialized()
+comment6.params=syncStates\ isRecovery
+comment6.target=void\ onReceivedSyncState(java.util.List,\ boolean)
+comment7.params=prefix
+comment7.target=void\ onRegisterFailed(net.named_data.jndn.Name)
+comment8.params=e
+comment8.target=void\ insertUpdate(javax.swing.event.DocumentEvent)
+comment9.params=e
+comment9.target=void\ removeUpdate(javax.swing.event.DocumentEvent)
+numComments=12
