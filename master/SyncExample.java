@@ -90,7 +90,7 @@ OnTimeout, DocumentListener
 
         setSize(600, 600);
 
-        codeArea = new JTextArea("", 30, 50);
+        codeArea = new JTextArea(" ", 30, 50);
         codeArea.setBorder ( new TitledBorder ( new EtchedBorder (), "Display Area" ) );
         codeArea.getDocument().addDocumentListener(this);
 
@@ -106,15 +106,15 @@ OnTimeout, DocumentListener
     public void
     publish() throws IOException, SecurityException
     {
-        m_content++;
+        m_content++;                                                                                                                                                                                                                                                                                                                                                                           
         m_chronoSync.publishNextSequenceNo();
     }
 
     public void
     onData(Interest interest, Data data)
     {
-        codeArea.append("onData: " + interest.getName().toUri() + " ");
-        m_content = Integer.parseInt(data.getContent().toString());
+        //codeArea.append("onData: " + interest.getName().toUri() + " ");
+        //m_content = Integer.parseInt(data.getContent().toString());
     }
 
     public void
@@ -122,7 +122,7 @@ OnTimeout, DocumentListener
     {
         // pass
     }
-
+    String tr = "";
     public void
     onInterest(Name prefix, Interest interest, Transport transport, long registeredPrefixId)
     {
@@ -130,7 +130,12 @@ OnTimeout, DocumentListener
 
         // Create response Data
         Data data = new Data(interest.getName());
-        data.setContent(new Blob(Integer.toString(m_content)));
+        //Name code = new Name(codeArea.getText());
+        //System.out.println(codeArea.getText());
+        //Data data = new Data(code);
+        //data.setContent(new Blob(tr));
+        data.setContent(new Blob(codeArea.getText()));
+        tr="";
 
         Blob encodedData = data.wireEncode();
 
@@ -142,7 +147,7 @@ OnTimeout, DocumentListener
             System.out.println(e.getMessage());
         }
 
-        // Publish new Data
+        //Publish new Data
         //try {
         //  publish();
         //}
@@ -200,9 +205,10 @@ OnTimeout, DocumentListener
 
     public void insertUpdate(DocumentEvent e)
     {
-        //something has been inserted into the text box
+        System.out.println("Publishing data");
+        tr=codeArea.getText().substring(codeArea.getText().length()-1);
         try {
-          publish();
+            publish();
         } catch (Exception f){;}
     }
 

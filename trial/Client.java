@@ -16,7 +16,7 @@ import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnTimeout;
-public class Client extends JFrame
+public class Client extends JFrame 
 {
 
     //private Face m_face;
