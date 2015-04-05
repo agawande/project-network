@@ -102,7 +102,7 @@ OnTimeout, DocumentListener
         panel.add(codeAreaScroll);
         add(panel);
         setVisible(true);
-        
+
         codeArea.addKeyListener(new KeyListener(){
                 @Override
                 public void keyPressed(KeyEvent e){
@@ -134,7 +134,32 @@ OnTimeout, DocumentListener
         System.out.println("onData: " + interest.getName().toUri() + "\n");
         //codeArea.append("onData: " + interest.getName().toUri() + "\n");
         //codeArea.append(data+"\n");
-        codeArea.setText(data.getContent().toString());
+        String keyPressed = data.getContent().toString();
+        System.out.println(keyPressed);
+        Document doc = codeArea.getDocument();
+        //SimpleAttributeSet attributes = new SimpleAttributeSet();
+        //try{
+        //    doc.insertString(doc.getLength(), keyPressed, attributes);
+        //} catch(Exception e){}
+
+        if(!keyPressed.equals(""))
+        {
+            String[] contents = keyPressed.split("~");
+            if((contents[1]).equals("8"))
+            { 
+                //codeArea.setText(codeArea.getText().substring(0, codeArea.getText().length()-1));
+                try{
+                    doc.remove(codeArea.getText().length()-1, 1);
+                } catch(Exception e){
+
+                }
+            }
+            else
+            {
+                codeArea.append(contents[0]);
+            }
+            codeArea.update(codeArea.getGraphics());
+        }
         //m_content = Integer.parseInt(data.getContent().toString());
     }
 

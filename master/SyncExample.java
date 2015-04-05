@@ -11,6 +11,7 @@ import javax.swing.text.*;
 import javax.swing.event.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
+import java.util.Scanner;
 
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
@@ -31,7 +32,7 @@ ChronoSync2013.OnReceivedSyncState,
 OnData,
 OnInterest,
 OnRegisterFailed,
-OnTimeout, DocumentListener
+OnTimeout, KeyListener
 {
     private ChronoSync2013 m_chronoSync;
     private Face m_face;
@@ -92,7 +93,8 @@ OnTimeout, DocumentListener
 
         codeArea = new JTextArea(" ", 30, 50);
         codeArea.setBorder ( new TitledBorder ( new EtchedBorder (), "Display Area" ) );
-        codeArea.getDocument().addDocumentListener(this);
+        //codeArea.getDocument().addDocumentListener(this);
+        codeArea.addKeyListener(this);
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
@@ -134,8 +136,8 @@ OnTimeout, DocumentListener
         //System.out.println(codeArea.getText());
         //Data data = new Data(code);
         //data.setContent(new Blob(tr));
-        data.setContent(new Blob(codeArea.getText()));
-        tr="";
+        data.setContent(new Blob(keyPressed));
+        //tr="";
 
         Blob encodedData = data.wireEncode();
 
@@ -202,29 +204,60 @@ OnTimeout, DocumentListener
     {
         throw new Error("Prefix registration failed");
     }
-
+    /*
     public void insertUpdate(DocumentEvent e)
     {
-        System.out.println("Publishing data");
-        tr=codeArea.getText().substring(codeArea.getText().length()-1);
-        try {
-            publish();
-        } catch (Exception f){;}
+    //System.out.println("Publishing data");
+    //tr=codeArea.getText().substring(codeArea.getText().length()-1);
+    //System.out.println(e.getKeyCode());
+    try {
+    publish();
+    } catch (Exception f){;}
     }
 
     public void removeUpdate(DocumentEvent e)
     {
-        //changed = true;
+    //changed = true;
     }
 
     public void changedUpdate(DocumentEvent e)
     {
-        //changed = true;
+    //changed = true;
+    }*/
+    String keyPressed="";
+    @Override
+    public void keyPressed(KeyEvent e){
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if(e.getKeyCode()!=16){
+            System.out.println("Key Pressed: "+e.getKeyChar());
+            System.out.println(e.getKeyCode());
+            String pressed=""+e.getKeyChar();
+
+            keyPressed = pressed+"~"+e.getKeyCode();
+            //keyPressed = ""+e.getKeyChar();
+            try {
+                publish();
+            } catch (Exception f){;}
+        }
     }
 
     public static void
     main(String[] argv)
     {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Professor(0)/Student(1): ");
+        int role = input.nextInt();
+        
+        System.out.println("Please enter class room name: ");
+        
         try {
             Face face = new Face();
 
