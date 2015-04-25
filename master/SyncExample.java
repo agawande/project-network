@@ -93,7 +93,7 @@ OnTimeout, KeyListener, CaretListener
 
         setSize(600, 600);
 
-        codeArea = new JTextArea(" ", 30, 50);
+        codeArea = new JTextArea("", 30, 50);
         codeArea.setBorder ( new TitledBorder ( new EtchedBorder (), "Display Area" ) );
         //codeArea.getDocument().addDocumentListener(this);
         codeArea.addKeyListener(this);
@@ -236,14 +236,11 @@ OnTimeout, KeyListener, CaretListener
     @Override
     public void keyTyped(KeyEvent e) {
         System.out.println("Key Pressed: "+e.getKeyChar());
-        System.out.println("Key code: " +(int)e.getKeyCode());
+        //System.out.println("Key code: " +(int)e.getKeyCode());
         if(e.getKeyCode()!=16){
-            //System.out.println("Key Pressed: "+e.getKeyChar());
-            //System.out.println("Key code: " + e.getKeyCode());
             String pressed=""+e.getKeyChar();
-
+            //System.out.println(codeArea.getCaretPosition());
             keyPressed = pressed+"~";
-            //keyPressed = ""+e.getKeyChar();
             try {
                 publish();
             } catch (Exception f){;}

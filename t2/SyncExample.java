@@ -128,7 +128,7 @@ OnTimeout, DocumentListener
         m_content++;
         m_chronoSync.publishNextSequenceNo();
     }
-
+    int pos;
     public void
     onData(Interest interest, Data data)
     {        
@@ -148,7 +148,14 @@ OnTimeout, DocumentListener
             String[] contents = keyPressed.split("~");
             //if content==backspace (represented by single space)
             System.out.println("Length: "+contents.length);
-            if(contents.length==3 || contents.length==1)
+            if(contents.length==3)
+            {
+                pos=Integer.parseInt(contents[1]); pos = Integer.parseInt(contents[1]);
+                System.out.println(pos);
+                codeArea.insert(contents[0], pos-1);
+                codeArea.setCaretPosition(pos);
+            }
+            else if(contents.length==1)
             {
                 if((contents[0]).equals("\u0008"))
                 {
@@ -160,21 +167,16 @@ OnTimeout, DocumentListener
 
                     }
                 }
-                else
-                {               
-                    codeArea.insert(contents[0], codeArea.getCaretPosition());
-                }
-
-                //codeArea.setCaretPosition(codeArea.getText().length());
+                //else if((contents[0]).equals("\u2386"))
+                //{
+                 //   codeArea.append("\n");
+                //}
             }
             else
             {
                 System.out.println(Integer.parseInt(contents[0]));
                 int pos = Integer.parseInt(contents[0]);
-                //if(pos != codeArea.getCaretPosition())
-                //{
-                    codeArea.setCaretPosition(pos-1);
-                //}
+                codeArea.setCaretPosition(pos);
             }
             codeArea.update(codeArea.getGraphics());
         }
