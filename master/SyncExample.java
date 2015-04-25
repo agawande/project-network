@@ -26,13 +26,15 @@ import net.named_data.jndn.security.SecurityException;
 import net.named_data.jndn.sync.ChronoSync2013;
 import net.named_data.jndn.transport.Transport;
 import net.named_data.jndn.util.Blob;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 
 public class SyncExample extends JFrame implements ChronoSync2013.OnInitialized,
 ChronoSync2013.OnReceivedSyncState,
 OnData,
 OnInterest,
 OnRegisterFailed,
-OnTimeout, KeyListener
+OnTimeout, KeyListener, CaretListener
 {
     private ChronoSync2013 m_chronoSync;
     private Face m_face;
@@ -95,6 +97,7 @@ OnTimeout, KeyListener
         codeArea.setBorder ( new TitledBorder ( new EtchedBorder (), "Display Area" ) );
         //codeArea.getDocument().addDocumentListener(this);
         codeArea.addKeyListener(this);
+        codeArea.addCaretListener(this);
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
@@ -138,7 +141,7 @@ OnTimeout, KeyListener
         //data.setContent(new Blob(tr));
         data.setContent(new Blob(keyPressed));
         //tr="";
-
+        keyPressed="";
         Blob encodedData = data.wireEncode();
 
         // Send Data
@@ -232,21 +235,32 @@ OnTimeout, KeyListener
 
     @Override
     public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
+        System.out.println("Key Pressed: "+e.getKeyChar());
+        System.out.println("Key code: " +(int)e.getKeyCode());
         if(e.getKeyCode()!=16){
-            System.out.println("Key Pressed: "+e.getKeyChar());
-            System.out.println(e.getKeyCode());
+            //System.out.println("Key Pressed: "+e.getKeyChar());
+            //System.out.println("Key code: " + e.getKeyCode());
             String pressed=""+e.getKeyChar();
 
-            keyPressed = pressed+"~"+e.getKeyCode();
+            keyPressed = pressed+"~";
             //keyPressed = ""+e.getKeyChar();
             try {
                 publish();
             } catch (Exception f){;}
         }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
+
+    public void caretUpdate(CaretEvent e) {
+        System.out.println("Cursor position: "+e.getDot());
+        keyPressed += e.getDot()+"~cursor";
+        try {
+            publish();
+        } catch (Exception f){;}
     }
 
     public static void
@@ -255,9 +269,9 @@ OnTimeout, KeyListener
         Scanner input = new Scanner(System.in);
         System.out.println("Professor(0)/Student(1): ");
         int role = input.nextInt();
-        
+
         System.out.println("Please enter class room name: ");
-        
+
         try {
             Face face = new Face();
 

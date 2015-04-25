@@ -97,6 +97,7 @@ OnTimeout, DocumentListener
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
+        codeArea.getCaret().setVisible(true);
         panel.add(start);
         panel.add(pause);
         panel.add(codeAreaScroll);
@@ -135,7 +136,7 @@ OnTimeout, DocumentListener
         //codeArea.append("onData: " + interest.getName().toUri() + "\n");
         //codeArea.append(data+"\n");
         String keyPressed = data.getContent().toString();
-        System.out.println("key pressed: "+keyPressed);
+        System.out.println(keyPressed);
         Document doc = codeArea.getDocument();
         //SimpleAttributeSet attributes = new SimpleAttributeSet();
         //try{
@@ -145,18 +146,35 @@ OnTimeout, DocumentListener
         if(!keyPressed.equals("1")&&!keyPressed.equals(""))
         {
             String[] contents = keyPressed.split("~");
-            if((contents[1]).equals("8"))
-            { 
-                //codeArea.setText(codeArea.getText().substring(0, codeArea.getText().length()-1));
-                try{
-                    doc.remove(codeArea.getText().length()-1, 1);
-                } catch(Exception e){
+            //if content==backspace (represented by single space)
+            System.out.println("Length: "+contents.length);
+            if(contents.length==3 || contents.length==1)
+            {
+                if((contents[0]).equals("\u0008"))
+                {
+                    System.out.println("Backspace!");
+                    //codeArea.setText(codeArea.getText().substring(0, codeArea.getText().length()-1));
+                    try{
+                        doc.remove(codeArea.getText().length()-1, 1);
+                    } catch(Exception e){
 
+                    }
                 }
+                else
+                {               
+                    codeArea.insert(contents[0], codeArea.getCaretPosition());
+                }
+
+                //codeArea.setCaretPosition(codeArea.getText().length());
             }
             else
             {
-                codeArea.append(contents[0]);
+                System.out.println(Integer.parseInt(contents[0]));
+                int pos = Integer.parseInt(contents[0]);
+                //if(pos != codeArea.getCaretPosition())
+                //{
+                    codeArea.setCaretPosition(pos-1);
+                //}
             }
             codeArea.update(codeArea.getGraphics());
         }
