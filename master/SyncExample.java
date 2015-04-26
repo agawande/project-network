@@ -34,7 +34,7 @@ ChronoSync2013.OnReceivedSyncState,
 OnData,
 OnInterest,
 OnRegisterFailed,
-OnTimeout, KeyListener, CaretListener
+OnTimeout, KeyListener, CaretListener, ActionListener
 {
     private ChronoSync2013 m_chronoSync;
     private Face m_face;
@@ -48,13 +48,16 @@ OnTimeout, KeyListener, CaretListener
 
     JTextArea codeArea;
     JScrollPane codeAreaScroll;
-    JButton start = new JButton("Start");
-    JButton pause = new JButton("Pause");
+    JButton invite = new JButton("Invite");
 
-    public SyncExample(Face face) throws SecurityException
+    Scanner input = new Scanner(System.in);
+    int role;
+    public SyncExample(Face face, String bprefix, int role) throws SecurityException
     {
         m_face = face;
         m_certificateName = new Name();
+        
+        this.role=role;
 
         // Set up KeyChain and Identity
         m_keyChain = Security.initialize(m_face, m_certificateName);
@@ -63,7 +66,7 @@ OnTimeout, KeyListener, CaretListener
         m_uuid = UUID.randomUUID();
         System.out.println(m_uuid);
         final Name DATA_PREFIX = new Name("/ndn/whiteboard/example/" + m_uuid);
-        final Name BROADCAST_PREFIX = new Name("/ndn/broadcast/whiteboard");
+        final Name BROADCAST_PREFIX = new Name(bprefix);
 
         int session = (int)Math.round(System.currentTimeMillis() / 1000.0);
 
@@ -90,7 +93,6 @@ OnTimeout, KeyListener, CaretListener
         catch (Exception e) {
             System.out.println("Exception: " + e.getMessage());
         }
-
         setSize(600, 600);
 
         codeArea = new JTextArea("", 30, 50);
@@ -101,11 +103,32 @@ OnTimeout, KeyListener, CaretListener
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-        panel.add(start);
-        panel.add(pause);
+        invite.addActionListener(this);
+        panel.add(invite);
         panel.add(codeAreaScroll);
         add(panel);
         setVisible(true);
+
+        if(role == 2){
+            codeArea.setEditable(false);
+        }
+
+        codeArea.addKeyListener(new KeyListener(){
+                @Override
+                public void keyPressed(KeyEvent e){
+                    if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                        codeArea.append("\n");
+                    }
+                }
+
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                }
+            });
     }
 
     public void
@@ -114,12 +137,74 @@ OnTimeout, KeyListener, CaretListener
         m_content++;                                                                                                                                                                                                                                                                                                                                                                           
         m_chronoSync.publishNextSequenceNo();
     }
-
+    int pos;
+    int accept;
+    boolean isAccepted = true;
     public void
     onData(Interest interest, Data data)
     {
-        //codeArea.append("onData: " + interest.getName().toUri() + " ");
-        //m_content = Integer.parseInt(data.getContent().toString());
+        System.out.println("onData: " + interest.getName().toUri() + "\n");
+        String keyP = data.getContent().toString();
+        System.out.println(keyP);
+        Document doc = codeArea.getDocument();
+
+        if(keyP.contains("req/")&&role==1&&isAccepted)
+        {
+            System.out.println("Accept (1=Y, else=N)? ");
+            accept = input.nextInt();
+            if(accept==1)
+            {
+                keyPressed = "stop/"+keyP;
+                System.out.println(keyPressed);
+                isAccepted = false;
+                codeArea.setEditable(false);
+                codeArea.removeCaretListener(this);
+                try{                    
+                    publish();
+                }
+                catch(Exception f){};
+            }
+        }
+        else if(keyP.contains("all-stop")&&role==1)
+        {
+            codeArea.setEditable(true);
+            codeArea.addCaretListener(this);
+            isAccepted = true;
+        }
+        else{
+            if(!keyP.equals("1")&&!keyP.equals(""))
+            {
+                String[] contents = keyP.split("~");
+                //if content==backspace (represented by single space)
+                System.out.println("Length: "+contents.length);
+                if(contents.length==3)
+                {
+                    pos=Integer.parseInt(contents[1]); pos = Integer.parseInt(contents[1]);
+                    System.out.println(pos);
+                    codeArea.insert(contents[0], pos-1);
+                    codeArea.setCaretPosition(pos);
+                }
+                else if(contents.length==1)
+                {
+                    if((contents[0]).equals("\u0008"))
+                    {
+                        System.out.println("Backspace!");
+                        try{
+                            doc.remove(codeArea.getText().length()-1, 1);
+                        } catch(Exception e){
+
+                        }
+                    }
+                }
+                else
+                {
+                    System.out.println(Integer.parseInt(contents[0]));
+                    int pos = Integer.parseInt(contents[0]);
+                    codeArea.setCaretPosition(pos);
+                }
+                codeArea.update(codeArea.getGraphics());
+            }
+        }
     }
 
     public void
@@ -260,19 +345,32 @@ OnTimeout, KeyListener, CaretListener
         } catch (Exception f){;}
     }
 
+    public void actionPerformed(ActionEvent e) { 
+        //codeArea.setEditable(false);
+        //keyPressed = "invite";
+        //codeArea.removeCaretListener(this);
+        //try {
+        //    publish();
+        //} catch (Exception f){;}
+    }
+
     public static void
     main(String[] argv)
     {
-        Scanner input = new Scanner(System.in);
-        System.out.println("Professor(0)/Student(1): ");
-        int role = input.nextInt();
+        //Scanner input = new Scanner(System.in);
+        //System.out.println("Please choose role (1 = Professor, 2 = Student): ");
+        //int role = input.nextInt();        
 
-        System.out.println("Please enter class room name: ");
+        //System.out.println("Please enter boradcast prefix: ");
+        //String bprefix = input.next();
+
+        int role = 1;
+        String bprefix = "/ndn/broadcast/whiteboard";
 
         try {
             Face face = new Face();
 
-            SyncExample sync = new SyncExample(face);
+            SyncExample sync = new SyncExample(face, bprefix, role);
 
             while (true) {
                 face.processEvents();
