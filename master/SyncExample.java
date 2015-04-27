@@ -204,12 +204,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
         // Create response Data
         Data data = new Data(interest.getName());
-        //Name code = new Name(codeArea.getText());
-        //System.out.println(codeArea.getText());
-        //Data data = new Data(code);
-        //data.setContent(new Blob(tr));
         data.setContent(new Blob(keyPressed));
-        //tr="";
         keyPressed="";
         Blob encodedData = data.wireEncode();
 
@@ -220,12 +215,6 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-
-        //Publish new Data
-        //try {
-        //  publish();
-        //}
-        //catch (Exception e){;}
     }
 
     public final void
@@ -276,26 +265,6 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     {
         throw new Error("Prefix registration failed");
     }
-    /*
-    public void insertUpdate(DocumentEvent e)
-    {
-    //System.out.println("Publishing data");
-    //tr=codeArea.getText().substring(codeArea.getText().length()-1);
-    //System.out.println(e.getKeyCode());
-    try {
-    publish();
-    } catch (Exception f){;}
-    }
-
-    public void removeUpdate(DocumentEvent e)
-    {
-    //changed = true;
-    }
-
-    public void changedUpdate(DocumentEvent e)
-    {
-    //changed = true;
-    }*/
     String keyPressed="";
     @Override
     public void keyPressed(KeyEvent e){
@@ -304,18 +273,18 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
     @Override
     public void keyTyped(KeyEvent e) {
-        System.out.println("Key Pressed: "+e.getKeyChar());
         //System.out.println("Key code: " +(int)e.getKeyCode());
+        String pressed=""+e.getKeyChar();
         if(e.getKeyChar() == KeyEvent.VK_ENTER)
         {
-            keyPressed = "\n~";
+            keyPressed = codeArea.getCaretPosition()+"~enter";
         }
         else
         {
-            String pressed=""+e.getKeyChar();
             //System.out.println(codeArea.getCaretPosition());
             keyPressed = pressed+"~";
         }
+        System.out.println("Key Pressed: "+keyPressed);
         try {
             publish();
         } catch (Exception f){;}
@@ -327,20 +296,19 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     }
 
     public void caretUpdate(CaretEvent e) {
-        System.out.println("Cursor position: "+e.getDot());
-        keyPressed += e.getDot()+"~cursor";
-        try {
-            publish();
-        } catch (Exception f){;}
+        //System.out.println("Cursor position: "+e.getDot());
+        System.out.println("keypressecaret: "+keyPressed);
+        if(!keyPressed.contains("cursor"))
+        {
+            keyPressed += e.getDot()+"~cursor";
+            System.out.println(keyPressed);
+            try {
+                publish();
+            } catch (Exception f){;}
+        }
     }
 
-    public void actionPerformed(ActionEvent e) { 
-        //codeArea.setEditable(false);
-        //keyPressed = "invite";
-        //codeArea.removeCaretListener(this);
-        //try {
-        //    publish();
-        //} catch (Exception f){;}
+    public void actionPerformed(ActionEvent e) {
     }
 
     public static void

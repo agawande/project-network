@@ -51,12 +51,12 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
     JButton done = new JButton("Done");
     String appName;
     int role;
-    
+
     public SyncExample(Face face, String bprefix, int role, String appName) throws SecurityException
     {
         m_face = face;
         m_certificateName = new Name();
-        
+
         this.appName = appName;
         this.role=role;
 
@@ -173,7 +173,7 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 System.out.println("Length: "+contents.length);
                 if(contents.length==3)
                 {
-                    pos=Integer.parseInt(contents[1]); pos = Integer.parseInt(contents[1]);
+                    pos=Integer.parseInt(contents[1]);
                     System.out.println(pos);
                     codeArea.insert(contents[0], pos-1);
                     codeArea.setCaretPosition(pos);
@@ -194,6 +194,10 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 {
                     System.out.println(Integer.parseInt(contents[0]));
                     int pos = Integer.parseInt(contents[0]);
+                    if(contents[1].equals("enter"))
+                    {
+                        codeArea.append("\n");
+                    }
                     codeArea.setCaretPosition(pos);
                 }
                 codeArea.update(codeArea.getGraphics());
@@ -232,12 +236,6 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-
-        //Publish new Data
-        //try {
-        //  publish();
-        //}
-        //catch (Exception e){;}
     }
 
     public final void
@@ -340,7 +338,7 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
     }
 
     public void actionPerformed(ActionEvent e) {
-        
+
         if(e.getSource() == req)
         {
             keyPressed = "req/"+appName;
