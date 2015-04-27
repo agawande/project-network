@@ -56,7 +56,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     {
         m_face = face;
         m_certificateName = new Name();
-        
+
         this.role=role;
 
         // Set up KeyChain and Identity
@@ -113,22 +113,6 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             codeArea.setEditable(false);
         }
 
-        codeArea.addKeyListener(new KeyListener(){
-                @Override
-                public void keyPressed(KeyEvent e){
-                    if(e.getKeyCode() == KeyEvent.VK_ENTER){
-                        codeArea.append("\n");
-                    }
-                }
-
-                @Override
-                public void keyTyped(KeyEvent e) {
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                }
-            });
     }
 
     public void
@@ -159,7 +143,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 isAccepted = false;
                 codeArea.setEditable(false);
                 codeArea.removeCaretListener(this);
-                try{                    
+                try{
                     publish();
                 }
                 catch(Exception f){};
@@ -179,7 +163,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 System.out.println("Length: "+contents.length);
                 if(contents.length==3)
                 {
-                    pos=Integer.parseInt(contents[1]); pos = Integer.parseInt(contents[1]);
+                    pos=Integer.parseInt(contents[1]);
                     System.out.println(pos);
                     codeArea.insert(contents[0], pos-1);
                     codeArea.setCaretPosition(pos);
@@ -322,14 +306,19 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public void keyTyped(KeyEvent e) {
         System.out.println("Key Pressed: "+e.getKeyChar());
         //System.out.println("Key code: " +(int)e.getKeyCode());
-        if(e.getKeyCode()!=16){
+        if(e.getKeyChar() == KeyEvent.VK_ENTER)
+        {
+            keyPressed = "\n~";
+        }
+        else
+        {
             String pressed=""+e.getKeyChar();
             //System.out.println(codeArea.getCaretPosition());
             keyPressed = pressed+"~";
-            try {
-                publish();
-            } catch (Exception f){;}
         }
+        try {
+            publish();
+        } catch (Exception f){;}
     }
 
     @Override

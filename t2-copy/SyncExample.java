@@ -12,6 +12,7 @@ import javax.swing.event.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 import java.nio.ByteBuffer;
+import java.util.Scanner;
 
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
@@ -32,7 +33,7 @@ ChronoSync2013.OnReceivedSyncState,
 OnData,
 OnInterest,
 OnRegisterFailed,
-OnTimeout, DocumentListener
+OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
 {
     private ChronoSync2013 m_chronoSync;
     private Face m_face;
@@ -46,13 +47,18 @@ OnTimeout, DocumentListener
 
     JTextArea codeArea;
     JScrollPane codeAreaScroll;
-    JButton start = new JButton("Start");
-    JButton pause = new JButton("Pause");
-
-    public SyncExample(Face face) throws SecurityException
+    JButton req = new JButton("Request");
+    JButton done = new JButton("Done");
+    String appName;
+    int role;
+    
+    public SyncExample(Face face, String bprefix, int role, String appName) throws SecurityException
     {
         m_face = face;
         m_certificateName = new Name();
+        
+        this.appName = appName;
+        this.role=role;
 
         // Set up KeyChain and Identity
         m_keyChain = Security.initialize(m_face, m_certificateName);
@@ -61,7 +67,7 @@ OnTimeout, DocumentListener
         m_uuid = UUID.randomUUID();
         System.out.println(m_uuid);
         final Name DATA_PREFIX = new Name("/ndn/whiteboard/example/" + m_uuid);
-        final Name BROADCAST_PREFIX = new Name("/ndn/broadcast/whiteboard");
+        final Name BROADCAST_PREFIX = new Name(bprefix);
 
         int session = (int)Math.round(System.currentTimeMillis() / 1000.0);
 
@@ -94,14 +100,23 @@ OnTimeout, DocumentListener
         codeArea = new JTextArea("", 30, 50);
         codeArea.setBorder ( new TitledBorder ( new EtchedBorder (), "Display Area" ) );
         codeArea.getDocument().addDocumentListener(this);
+        codeArea.addKeyListener(this);
+        //codeArea.addCaretListener(this);
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-        panel.add(start);
-        panel.add(pause);
+        codeArea.getCaret().setVisible(true);
+        req.addActionListener(this);
+        done.addActionListener(this);
+        panel.add(req);
+        panel.add(done);
         panel.add(codeAreaScroll);
         add(panel);
         setVisible(true);
+
+        if(role == 2){
+            codeArea.setEditable(false);
+        }
 
         codeArea.addKeyListener(new KeyListener(){
                 @Override
@@ -127,40 +142,63 @@ OnTimeout, DocumentListener
         m_content++;
         m_chronoSync.publishNextSequenceNo();
     }
-
+    int pos;
     public void
     onData(Interest interest, Data data)
     {        
         System.out.println("onData: " + interest.getName().toUri() + "\n");
-        //codeArea.append("onData: " + interest.getName().toUri() + "\n");
-        //codeArea.append(data+"\n");
-        String keyPressed = data.getContent().toString();
-        System.out.println("key pressed: "+keyPressed);
+        String keyP = data.getContent().toString();
+        System.out.println(keyP);
         Document doc = codeArea.getDocument();
-        //SimpleAttributeSet attributes = new SimpleAttributeSet();
-        //try{
-        //    doc.insertString(doc.getLength(), keyPressed, attributes);
-        //} catch(Exception e){}
 
-        if(!keyPressed.equals("1")&&!keyPressed.equals(""))
+        if(keyP.contains("stop/req")&&role==2)
         {
-            String[] contents = keyPressed.split("~");
-            if((contents[1]).equals("8"))
-            { 
-                //codeArea.setText(codeArea.getText().substring(0, codeArea.getText().length()-1));
-                try{
-                    doc.remove(codeArea.getText().length()-1, 1);
-                } catch(Exception e){
-
-                }
-            }
-            else
+            String[] contents = keyP.split("/");
+            if(appName.equals(contents[2]))
             {
-                codeArea.append(contents[0]);
+                keyPressed="all-stop";
+                try{
+                    publish();
+                }
+                catch(Exception f){};
+                codeArea.setEditable(true);
+                codeArea.addCaretListener(this);
             }
-            codeArea.update(codeArea.getGraphics());
         }
-        //m_content = Integer.parseInt(data.getContent().toString());
+        else{
+            if(!keyP.equals("1")&&!keyP.equals(""))
+            {
+                String[] contents = keyP.split("~");
+                //if content==backspace (represented by single space)
+                System.out.println("Length: "+contents.length);
+                if(contents.length==3)
+                {
+                    pos=Integer.parseInt(contents[1]); pos = Integer.parseInt(contents[1]);
+                    System.out.println(pos);
+                    codeArea.insert(contents[0], pos-1);
+                    codeArea.setCaretPosition(pos);
+                }
+                else if(contents.length==1)
+                {
+                    if((contents[0]).equals("\u0008"))
+                    {
+                        System.out.println("Backspace!");
+                        try{
+                            doc.remove(codeArea.getText().length()-1, 1);
+                        } catch(Exception e){
+
+                        }
+                    }
+                }
+                else
+                {
+                    System.out.println(Integer.parseInt(contents[0]));
+                    int pos = Integer.parseInt(contents[0]);
+                    codeArea.setCaretPosition(pos);
+                }
+                codeArea.update(codeArea.getGraphics());
+            }
+        }
     }
 
     public void
@@ -169,15 +207,22 @@ OnTimeout, DocumentListener
         System.out.println("timeout\n");
     }
 
+    String tr = "";
+    String keyPressed="";
     public void
     onInterest(Name prefix, Interest interest, Transport transport, long registeredPrefixId)
     {
-        //System.out.println("onInterest: " + interest.getName().toUri() + "\n");
+        System.out.println("onInterest: " + interest.getName().toUri() + "\n");
 
         // Create response Data
         Data data = new Data(interest.getName());
-        data.setContent(new Blob(Integer.toString(m_content)));
-
+        //Name code = new Name(codeArea.getText());
+        //System.out.println(codeArea.getText());
+        //Data data = new Data(code);
+        //data.setContent(new Blob(tr));
+        data.setContent(new Blob(keyPressed));
+        //tr="";
+        keyPressed="";
         Blob encodedData = data.wireEncode();
 
         // Send Data
@@ -188,7 +233,7 @@ OnTimeout, DocumentListener
             System.out.println(e.getMessage());
         }
 
-        // Publish new Data
+        //Publish new Data
         //try {
         //  publish();
         //}
@@ -262,13 +307,68 @@ OnTimeout, DocumentListener
         //changed = true;
     }
 
+    @Override
+    public void keyPressed(KeyEvent e){
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        System.out.println("Key Pressed: "+e.getKeyChar());
+        //System.out.println("Key code: " +(int)e.getKeyCode());
+        if(e.getKeyCode()!=16){
+            String pressed=""+e.getKeyChar();
+            //System.out.println(codeArea.getCaretPosition());
+            keyPressed = pressed+"~";
+            try {
+                publish();
+            } catch (Exception f){;}
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
+
+    public void caretUpdate(CaretEvent e) {
+        System.out.println("Cursor position: "+e.getDot());
+        keyPressed += e.getDot()+"~cursor";
+        try {
+            publish();
+        } catch (Exception f){;}
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        
+        if(e.getSource() == req)
+        {
+            keyPressed = "req/"+appName;
+        }else {
+            keyPressed = "done";
+        }
+        try {
+            publish();
+        } catch (Exception f){;}
+    }
+
     public static void
     main(String[] argv)
     {
+        //Scanner input = new Scanner(System.in);
+        //System.out.println("Please choose role (1 = Professor, 2 = Student): ");
+        //int role = input.nextInt();        
+
+        //System.out.println("Please enter boradcast prefix: ");
+        //String bprefix = input.next();
+        int role = 2;
+        String bprefix = "/ndn/broadcast/whiteboard";
+        String appName = "random";
+
         try {
             Face face = new Face();
 
-            SyncExample sync = new SyncExample(face);
+            SyncExample sync = new SyncExample(face, bprefix, role, appName);
 
             while (true) {
                 face.processEvents();
