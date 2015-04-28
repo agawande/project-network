@@ -48,16 +48,21 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
     JTextArea codeArea;
     JScrollPane codeAreaScroll;
-    JButton invite = new JButton("Invite");
+    JButton req = new JButton("Request");
+    JButton done = new JButton("Done");
 
     Scanner input = new Scanner(System.in);
     int role;
-    public SyncExample(Face face, String bprefix, int role) throws SecurityException
+    String appName;
+    String bprefix;
+    public SyncExample(Face face, String bprefix, int role, String appName) throws SecurityException
     {
         m_face = face;
         m_certificateName = new Name();
 
+        this.bprefix = bprefix;
         this.role=role;
+        this.appName = appName;
 
         // Set up KeyChain and Identity
         m_keyChain = Security.initialize(m_face, m_certificateName);
@@ -103,14 +108,20 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
         codeAreaScroll = new JScrollPane(codeArea);  //, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-        invite.addActionListener(this);
-        panel.add(invite);
+        req.addActionListener(this);
+        done.addActionListener(this);
+        panel.add(req);
+        panel.add(done);
         panel.add(codeAreaScroll);
         add(panel);
         setVisible(true);
 
         if(role == 2){
-            codeArea.setEditable(false);
+            codeArea.setEditable(false);            
+        }
+        else{            
+            req.setEnabled(false);
+            done.setEnabled(false);
         }
 
     }
@@ -165,8 +176,15 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 {
                     pos=Integer.parseInt(contents[1]);
                     System.out.println(pos);
-                    codeArea.insert(contents[0], pos-1);
-                    codeArea.setCaretPosition(pos);
+                    try{
+                        codeArea.insert(contents[0], pos-1);
+                        codeArea.setCaretPosition(pos);
+                    } catch(Exception ex){
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
+                    }                    
                 }
                 else if(contents.length==1)
                 {
@@ -184,6 +202,10 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 {
                     System.out.println(Integer.parseInt(contents[0]));
                     int pos = Integer.parseInt(contents[0]);
+                    if(contents[1].equals("enter"))
+                    {
+                        codeArea.append("\n");
+                    }
                     codeArea.setCaretPosition(pos);
                 }
                 codeArea.update(codeArea.getGraphics());
@@ -309,6 +331,15 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     }
 
     public void actionPerformed(ActionEvent e) {
+        if(e.getSource() == req)
+        {
+            keyPressed = "req/"+appName;
+        }else {
+            keyPressed = "done";
+        }
+        try {
+            publish();
+        } catch (Exception f){;}        
     }
 
     public static void
@@ -323,11 +354,12 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
         int role = 1;
         String bprefix = "/ndn/broadcast/whiteboard";
+        String appName = "prof/uuid";
 
         try {
             Face face = new Face();
 
-            SyncExample sync = new SyncExample(face, bprefix, role);
+            SyncExample sync = new SyncExample(face, bprefix, role, appName);
 
             while (true) {
                 face.processEvents();

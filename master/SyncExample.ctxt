@@ -1,6 +1,6 @@
 #BlueJ class context
-comment0.params=face\ bprefix\ role
-comment0.target=SyncExample(net.named_data.jndn.Face,\ java.lang.String,\ int)
+comment0.params=face\ bprefix\ role\ appName
+comment0.target=SyncExample(net.named_data.jndn.Face,\ java.lang.String,\ int,\ java.lang.String)
 comment1.params=
 comment1.target=void\ publish()
 comment10.params=e

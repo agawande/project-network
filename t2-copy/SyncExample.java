@@ -175,8 +175,15 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 {
                     pos=Integer.parseInt(contents[1]);
                     System.out.println(pos);
-                    codeArea.insert(contents[0], pos-1);
-                    codeArea.setCaretPosition(pos);
+                    try{
+                        codeArea.insert(contents[0], pos-1);
+                        codeArea.setCaretPosition(pos);
+                    } catch(Exception ex){
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
+                    }                    
                 }
                 else if(contents.length==1)
                 {
