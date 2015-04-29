@@ -117,6 +117,23 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
         if(role == 2){
             codeArea.setEditable(false);
         }
+
+        codeArea.addKeyListener(new KeyListener(){
+                @Override
+                public void keyPressed(KeyEvent e){
+                    if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                        codeArea.append("\n");
+                    }
+                }
+
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                }
+            });
     }
 
     public void
@@ -126,6 +143,7 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
         m_chronoSync.publishNextSequenceNo();
     }
     int pos;
+    String[] contents;
     public void
     onData(Interest interest, Data data)
     {        
@@ -148,6 +166,33 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 codeArea.addCaretListener(this);
             }
         }
+        else if(keyP.equals("sync"))
+        {
+            keyPressed = "syncans~"+codeArea.getText()+"~"+codeArea.getCaretPosition();
+            try{
+                publish();
+            }  catch(Exception e){}
+        }
+        else if(keyP.contains("syncans"))
+        {
+            System.out.println("syscans");
+            contents = keyP.split("~");
+            if(contents[1].contains("\\n"))
+            {
+                String[] subcon = contents[1].split("\\n");
+                for(String line: subcon)
+                {
+                    codeArea.setText(line);
+                    codeArea.append("\n");
+                }
+            }
+            else
+            {
+                codeArea.setText(contents[1]);
+            }
+            codeArea.setCaretPosition(Integer.parseInt(contents[2]));
+            codeArea.update(codeArea.getGraphics());
+        }
         else{
             if(!keyP.equals("1")&&!keyP.equals(""))
             {
@@ -158,8 +203,15 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 {
                     pos=Integer.parseInt(contents[1]);
                     System.out.println(pos);
-                    codeArea.insert(contents[0], pos-1);
-                    codeArea.setCaretPosition(pos);
+                    try{
+                        codeArea.insert(contents[0], pos-1);
+                        codeArea.setCaretPosition(pos);
+                    } catch(Exception ex){
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
+                    }                    
                 }
                 else if(contents.length==1)
                 {
@@ -168,24 +220,28 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                         System.out.println("Backspace!");
                         try{
                             doc.remove(codeArea.getText().length()-1, 1);
-                        } catch(Exception e){}
-                    }
-                    else if((contents[0]).equals("\n"))
-                    {
-                        codeArea.append("\n");
-                        codeArea.setCaretPosition(codeArea.getCaretPosition()+1);
-                    }
-                    else
-                    {
-                        codeArea.append(contents[0]);
-                        codeArea.setCaretPosition(codeArea.getCaretPosition()+1);
+                        } catch(Exception e){
+
+                        }
                     }
                 }
                 else
                 {
                     System.out.println(Integer.parseInt(contents[0]));
-                    int pos = Integer.parseInt(contents[0]);
-                    codeArea.setCaretPosition(pos);
+                    int pos = Integer.parseInt(contents[0]);                    
+                    if(contents[1].equals("enter"))
+                    {
+                        codeArea.append("\n");
+                    }
+                    try{
+                        codeArea.setCaretPosition(pos);
+                    } catch(Exception ex){
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
+                    }           
+
                 }
                 codeArea.update(codeArea.getGraphics());
             }
@@ -207,7 +263,12 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
 
         // Create response Data
         Data data = new Data(interest.getName());
+        //Name code = new Name(codeArea.getText());
+        //System.out.println(codeArea.getText());
+        //Data data = new Data(code);
+        //data.setContent(new Blob(tr));
         data.setContent(new Blob(keyPressed));
+        //tr="";
         keyPressed="";
         Blob encodedData = data.wireEncode();
 
@@ -296,21 +357,14 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
     public void keyTyped(KeyEvent e) {
         System.out.println("Key Pressed: "+e.getKeyChar());
         //System.out.println("Key code: " +(int)e.getKeyCode());
-
-        if(e.getKeyChar() == KeyEvent.VK_ENTER)
-        {
-            keyPressed = "\n~";
-        }
-        else
-        {
+        if(e.getKeyCode()!=16){
             String pressed=""+e.getKeyChar();
             //System.out.println(codeArea.getCaretPosition());
             keyPressed = pressed+"~";
+            try {
+                publish();
+            } catch (Exception f){;}
         }
-
-        try {
-            publish();
-        } catch (Exception f){;}
     }
 
     @Override
@@ -333,8 +387,6 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
             keyPressed = "req/"+appName;
         }else {
             keyPressed = "done";
-            codeArea.setEditable(false);
-            codeArea.removeCaretListener(this);
         }
         try {
             publish();

@@ -143,6 +143,7 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
         m_chronoSync.publishNextSequenceNo();
     }
     int pos;
+    String[] contents;
     public void
     onData(Interest interest, Data data)
     {        
@@ -164,6 +165,32 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 codeArea.setEditable(true);
                 codeArea.addCaretListener(this);
             }
+        }
+        else if(keyP.equals("sync"))
+        {
+            keyPressed = "syncans~"+codeArea.getText()+"~"+codeArea.getCaretPosition();
+            try{
+                publish();
+            }  catch(Exception e){}
+        }
+        else if(keyP.contains("syncans"))
+        {
+            System.out.println("syscans");
+            contents = keyP.split("~");
+            if(contents[1].contains("\\n"))
+            {
+                String[] subcon = contents[1].split("\\n");
+                for(String line: subcon)
+                {
+                    codeArea.setText(line);
+                    codeArea.append("\n");
+                }
+            }
+            else
+            {
+                codeArea.setText(contents[1]);
+            }
+            codeArea.setCaretPosition(Integer.parseInt(contents[2]));
         }
         else{
             if(!keyP.equals("1")&&!keyP.equals(""))
@@ -200,16 +227,25 @@ OnTimeout, DocumentListener, KeyListener, CaretListener, ActionListener
                 else
                 {
                     System.out.println(Integer.parseInt(contents[0]));
-                    int pos = Integer.parseInt(contents[0]);
+                    int pos = Integer.parseInt(contents[0]);                    
                     if(contents[1].equals("enter"))
                     {
                         codeArea.append("\n");
                     }
-                    codeArea.setCaretPosition(pos);
+                    try{
+                        codeArea.setCaretPosition(pos);
+                    } catch(Exception ex){
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
+                    }           
+
                 }
-                codeArea.update(codeArea.getGraphics());
+                
             }
         }
+        codeArea.update(codeArea.getGraphics());
     }
 
     public void

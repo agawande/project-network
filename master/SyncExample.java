@@ -12,6 +12,7 @@ import javax.swing.event.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 import java.util.Scanner;
+import java.io.*;
 
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
@@ -50,6 +51,9 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     JScrollPane codeAreaScroll;
     JButton req = new JButton("Request");
     JButton done = new JButton("Done");
+    JButton clear = new JButton("Clear");
+    JButton save = new JButton("Save");
+    JButton exit = new JButton("Exit");
 
     Scanner input = new Scanner(System.in);
     int role;
@@ -110,8 +114,12 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
         req.addActionListener(this);
         done.addActionListener(this);
+        exit.addActionListener(this);
         panel.add(req);
         panel.add(done);
+        panel.add(clear);
+        panel.add(save);
+        panel.add(exit);
         panel.add(codeAreaScroll);
         add(panel);
         setVisible(true);
@@ -135,6 +143,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     int pos;
     int accept;
     boolean isAccepted = true;
+    String[] contents;
     public void
     onData(Interest interest, Data data)
     {
@@ -166,10 +175,50 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             codeArea.addCaretListener(this);
             isAccepted = true;
         }
+        else if(keyP.contains("stop/req")&&role==2)
+        {
+            String[] contents = keyP.split("/");
+            if(appName.equals(contents[2]))
+            {
+                keyPressed="all-stop";
+                try{
+                    publish();
+                }
+                catch(Exception f){};
+                codeArea.setEditable(true);
+                codeArea.addCaretListener(this);
+            }
+        }
+        else if(keyP.equals("sync"))
+        {
+            keyPressed = "syncans~"+codeArea.getText()+"~"+codeArea.getCaretPosition();
+            try{
+                publish();
+            }  catch(Exception e){}
+        }
+        else if(keyP.contains("syncans"))
+        {
+            System.out.println("syscans");
+            contents = keyP.split("~");
+            if(contents[1].contains("\\n"))
+            {
+                String[] subcon = contents[1].split("\\n");
+                for(String line: subcon)
+                {
+                    codeArea.setText(line);
+                    codeArea.append("\n");
+                }
+            }
+            else
+            {
+                codeArea.setText(contents[1]);
+            }
+            codeArea.setCaretPosition(Integer.parseInt(contents[2]));
+        }
         else{
             if(!keyP.equals("1")&&!keyP.equals(""))
             {
-                String[] contents = keyP.split("~");
+                contents = keyP.split("~");
                 //if content==backspace (represented by single space)
                 System.out.println("Length: "+contents.length);
                 if(contents.length==3)
@@ -208,9 +257,9 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                     }
                     codeArea.setCaretPosition(pos);
                 }
-                codeArea.update(codeArea.getGraphics());
             }
         }
+        codeArea.update(codeArea.getGraphics());
     }
 
     public void
@@ -334,8 +383,14 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         if(e.getSource() == req)
         {
             keyPressed = "req/"+appName;
-        }else {
+        }else if (e.getSource() == done) {
             keyPressed = "done";
+        } else if (e.getSource() == exit)
+        {
+            System.exit(1);
+        } else if ((e.getSource() == clear))
+        {
+
         }
         try {
             publish();
@@ -345,16 +400,46 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public static void
     main(String[] argv)
     {
-        //Scanner input = new Scanner(System.in);
-        //System.out.println("Please choose role (1 = Professor, 2 = Student): ");
-        //int role = input.nextInt();        
+        boolean uPrefix=true;
+        Scanner input = new Scanner(System.in);
+        int role;
+        String bprefix="/ndn";
+        String appName="prof";
 
-        //System.out.println("Please enter boradcast prefix: ");
-        //String bprefix = input.next();
+        System.out.println("Please choose role (1 = Professor, 2 = Student): ");
+        role = input.nextInt();
 
-        int role = 1;
-        String bprefix = "/ndn/broadcast/whiteboard";
-        String appName = "prof/uuid";
+        System.out.println("Please enter boradcast prefix: ");
+        bprefix = input.next();
+
+        if(role==2){
+            System.out.println("Please enter your name");
+            appName = input.next();
+            System.out.println("Please enter your UUID");
+            appName += input.next();
+        } else {
+            appName = ""+UUID.randomUUID();
+        }
+
+        try{
+            String line;
+            Process process = Runtime.getRuntime().exec("nfd-status -b | grep \"localhost\"");
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            process.waitFor();
+            while ((line = in.readLine()) != null) {
+                if(line.contains(bprefix)&&role==1)
+                {
+                    System.out.println("This prefix is already registered by another professor!");
+                    do{
+                        System.out.println("Please enter boradcast prefix: ");
+                        bprefix = input.next();
+                        System.out.println("This prefix is already registered!");
+                    } while(line.contains(bprefix));
+                    break;
+                }
+            }
+            in.close();
+        } catch(Exception f){}
 
         try {
             Face face = new Face();
