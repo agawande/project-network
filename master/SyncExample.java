@@ -129,6 +129,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         if(role == 2){
             codeArea.setEditable(false);
             codeArea.getCaret().setVisible(true);
+            codeArea.removeCaretListener(this);
+            clear.setEnabled(false);
         }
         else{            
             req.setEnabled(false);
@@ -140,7 +142,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public void
     publish() throws IOException, SecurityException
     {
-        m_content++;                                                                                                                                                                                                                                                                                                                                                                           
+        m_content++;                                                                                                                                                                                                                                                                                                                                                             
         m_chronoSync.publishNextSequenceNo();
     }
     int pos;
@@ -190,8 +192,9 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 catch(Exception f){};
                 codeArea.setEditable(true);
                 codeArea.addCaretListener(this);
+                req.setEnabled(false);
             }
-        }
+        }/*
         else if(keyP.equals("sync"))
         {
             keyPressed = "syncans~"+codeArea.getText()+"~"+codeArea.getCaretPosition();
@@ -217,8 +220,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 codeArea.setText(contents[1]);
             }
             codeArea.setCaretPosition(Integer.parseInt(contents[2]));
-        }
-        else if(keyP.equals("clear")&&role==1)
+        }*/
+        else if(keyP.equals("clear")&&role==2)
         {
             codeArea.setText("");
             codeArea.setCaretPosition(0);
@@ -228,26 +231,27 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             {
                 contents = keyP.split("~");
                 //if content==backspace (represented by single space)
-                System.out.println("Length: "+contents.length);
+                //System.out.println("Length: "+contents.length);
                 if(contents.length==3)
                 {
                     pos=Integer.parseInt(contents[1]);
-                    System.out.println(pos);
+                    //System.out.println(pos);
                     try{
                         codeArea.insert(contents[0], pos-1);
                         codeArea.setCaretPosition(pos);
+                        //System.out.println("pOs: "+pos);
                     } catch(Exception ex){
-                        keyPressed = "sync";
-                        try{
-                            publish();
-                        } catch(Exception f){};
-                    }                    
+                        //keyPressed = "sync";
+                        //try{
+                        //    publish();
+                        //} catch(Exception f){};
+                    }
                 }
                 else if(contents.length==1)
                 {
                     if((contents[0]).equals("\u0008"))
                     {
-                        System.out.println("Backspace!");
+                        //System.out.println("Backspace!");
                         try{
                             doc.remove(codeArea.getText().length()-1, 1);
                         } catch(Exception e){
@@ -257,7 +261,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 }
                 else
                 {
-                    System.out.println(Integer.parseInt(contents[0]));
+                    //System.out.println(Integer.parseInt(contents[0]));
                     int pos = Integer.parseInt(contents[0]);
                     try{
                         if(contents[1].equals("enter"))
@@ -266,10 +270,10 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                         }
                         codeArea.setCaretPosition(pos);
                     } catch(Exception fe){
-                        keyPressed = "sync";
-                        try{
-                            publish();
-                        } catch(Exception f){};
+                        //keyPressed = "sync";
+                        //try{
+                        //    publish();
+                        //} catch(Exception f){};
                     }
                 }
             }
@@ -286,7 +290,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public void
     onInterest(Name prefix, Interest interest, Transport transport, long registeredPrefixId)
     {
-        System.out.println("onInterest: " + interest.getName().toUri() + "\n");
+        //System.out.println("onInterest: " + interest.getName().toUri() + "\n");
 
         // Create response Data
         Data data = new Data(interest.getName());
@@ -296,10 +300,10 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
         // Send Data
         try {
-            System.out.println("Sending Data for " + interest.getName().toUri());
+            //System.out.println("Sending Data for " + interest.getName().toUri());
             transport.send(encodedData.buf());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
         }
     }
 
@@ -312,7 +316,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public final void
     onReceivedSyncState(List syncStates, boolean isRecovery)
     {
-        System.out.println("On Recieved Sync State \n");
+        //System.out.println("On Recieved Sync State \n");
         // Iterate through SyncState updates
         for (int i = 0; i < syncStates.size(); ++i) {
             ChronoSync2013.SyncState state = (ChronoSync2013.SyncState)syncStates.get(i);
@@ -337,11 +341,11 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             Interest interest = new Interest(name);
 
             try {
-                System.out.println("Expressing Interest for " + name.toUri());
+                //System.out.println("Expressing Interest for " + name.toUri());
                 m_face.expressInterest(interest, this, this);
             }
             catch (Exception e) {
-                System.out.println(e.getMessage());
+                //System.out.println(e.getMessage());
             }
         }
     }
@@ -370,7 +374,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             //System.out.println(codeArea.getCaretPosition());
             keyPressed = pressed+"~";
         }
-        System.out.println("Key Pressed: "+keyPressed);
+        //System.out.println("Key Pressed: "+keyPressed);
         try {
             publish();
         } catch (Exception f){;}
@@ -383,11 +387,11 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
     public void caretUpdate(CaretEvent e) {
         //System.out.println("Cursor position: "+e.getDot());
-        System.out.println("keypressecaret: "+keyPressed);
-        if(!keyPressed.contains("cursor"))
+        //System.out.println("keypressecaret: "+keyPressed);
+        if(!keyPressed.contains("cursor")&&e.getDot()!=0)
         {
             keyPressed += e.getDot()+"~cursor";
-            System.out.println(keyPressed);
+            //System.out.println(keyPressed);
             try {
                 publish();
             } catch (Exception f){;}
@@ -406,10 +410,12 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         } else if ((e.getSource() == clear))
         {
             keyPressed = "clear";
+            codeArea.setText("");
+            codeArea.setCaretPosition(0);
         }
         else
         {
-            System.out.println("Save");
+            //System.out.println("Save");
             JFileChooser SaveAs = new JFileChooser();
             int actionDialog = SaveAs.showOpenDialog(this);
             if (actionDialog != JFileChooser.APPROVE_OPTION) {
