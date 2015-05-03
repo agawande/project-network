@@ -59,7 +59,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     int role;
     String appName;
     String bprefix;
-    Map<String, String> pastData = new HashMap<String, String>();
+    
+
     public SyncExample(Face face, String bprefix, int role, String appName) throws SecurityException
     {
         m_face = face;
@@ -143,16 +144,9 @@ OnTimeout, KeyListener, CaretListener, ActionListener
 
     public void
     publish() throws IOException, SecurityException
-    {        
-        pastData.put(""+m_content, keyPressed);
+    {
         m_content++;                                                                                                                                                                                                                                                                                                                                                             
         m_chronoSync.publishNextSequenceNo();
-        //for (String name: pastData.keySet()){
-        //    String key =name.toString();
-         //   String value = pastData.get(name).toString();  
-          //  System.out.println(key + " " + value);  
-
-        //} 
     }
     int pos;
     int accept;
@@ -287,7 +281,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                     } catch(Exception fe){
                         //keyPressed = "sync";
                         //try{
-                         //   publish();
+                        //    publish();
                         //} catch(Exception f){};
                     }
                 }
@@ -305,14 +299,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
     public void
     onInterest(Name prefix, Interest interest, Transport transport, long registeredPrefixId)
     {
-        System.out.println("onInterest: " + interest.getName().toUri() + "\n");
-        String[] parseInterest = interest.getName().toUri().split("/");
-        String num = parseInterest[parseInterest.length-1];
-        if(Integer.parseInt(num) != m_content && pastData.size()!=0){
-            System.out.println("interest number: " + num);
-            keyPressed = pastData.get(parseInterest[parseInterest.length-1]);
-            System.out.println(keyPressed);
-        }
+        //System.out.println("onInterest: " + interest.getName().toUri() + "\n");
+
         // Create response Data
         Data data = new Data(interest.getName());
         data.setContent(new Blob(keyPressed));
@@ -350,6 +338,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 continue;
             }
 
+            System.out.println("Seq number: " + state.getSequenceNo());
+            System.out.println("Last seq number: " + m_lastSequenceNo.get(id));
             // Don't fetch outdated data
             if (m_lastSequenceNo.get(id) != null && state.getSequenceNo() <= m_lastSequenceNo.get(id)) {
                 continue;
@@ -417,9 +407,6 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         if(e.getKeyChar() == KeyEvent.VK_ENTER)
         {
             keyPressed = codeArea.getCaretPosition()+"~enter";
-            try {
-                publish();
-            } catch (Exception f){;}
         }
         else
         {

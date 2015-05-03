@@ -1,0 +1,8 @@
+#BlueJ class context
+comment0.params=face
+comment0.target=net.named_data.jndn.security.KeyChain\ initialize(net.named_data.jndn.Face)
+comment1.params=face\ certificateName
+comment1.target=net.named_data.jndn.security.KeyChain\ initialize(net.named_data.jndn.Face,\ net.named_data.jndn.Name)
+comment2.params=array
+comment2.target=java.nio.ByteBuffer\ toBuffer(int[])
+numComments=3
