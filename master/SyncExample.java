@@ -131,6 +131,7 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             codeArea.getCaret().setVisible(true);
             codeArea.removeCaretListener(this);
             clear.setEnabled(false);
+            done.setEnabled(false);
         }
         else{            
             req.setEnabled(false);
@@ -176,9 +177,8 @@ OnTimeout, KeyListener, CaretListener, ActionListener
         }
         else if(keyP.contains("all-stop")&&role==1)
         {
-            codeArea.setEditable(true);
-            codeArea.addCaretListener(this);
-            isAccepted = true;
+            codeArea.setEditable(false);
+            codeArea.removeCaretListener(this);
         }
         else if(keyP.contains("stop/req")&&role==2)
         {
@@ -193,13 +193,20 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                 codeArea.setEditable(true);
                 codeArea.addCaretListener(this);
                 req.setEnabled(false);
+                done.setEnabled(true);
             }
-        }/*
+        }
+        else if(keyP.contains("done")&&role==1)
+        {
+            codeArea.setEditable(true);
+            codeArea.addCaretListener(this);
+            isAccepted = true;
+        }
         else if(keyP.equals("sync"))
         {
             keyPressed = "syncans~"+codeArea.getText()+"~"+codeArea.getCaretPosition();
             try{
-                publish();
+            publish();
             }  catch(Exception e){}
         }
         else if(keyP.contains("syncans"))
@@ -208,19 +215,19 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             contents = keyP.split("~");
             if(contents[1].contains("\\n"))
             {
-                String[] subcon = contents[1].split("\\n");
-                for(String line: subcon)
-                {
-                    codeArea.setText(line);
-                    codeArea.append("\n");
-                }
+            String[] subcon = contents[1].split("\\n");
+            for(String line: subcon)
+            {
+            codeArea.setText(line);
+            codeArea.append("\n");
+            }
             }
             else
             {
-                codeArea.setText(contents[1]);
+            codeArea.setText(contents[1]);
             }
             codeArea.setCaretPosition(Integer.parseInt(contents[2]));
-        }*/
+        }
         else if(keyP.equals("clear")&&role==2)
         {
             codeArea.setText("");
@@ -241,10 +248,10 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                         codeArea.setCaretPosition(pos);
                         //System.out.println("pOs: "+pos);
                     } catch(Exception ex){
-                        //keyPressed = "sync";
-                        //try{
-                        //    publish();
-                        //} catch(Exception f){};
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
                     }
                 }
                 else if(contents.length==1)
@@ -270,15 +277,15 @@ OnTimeout, KeyListener, CaretListener, ActionListener
                         }
                         codeArea.setCaretPosition(pos);
                     } catch(Exception fe){
-                        //keyPressed = "sync";
-                        //try{
-                        //    publish();
-                        //} catch(Exception f){};
+                        keyPressed = "sync";
+                        try{
+                            publish();
+                        } catch(Exception f){};
                     }
                 }
+                codeArea.update(codeArea.getGraphics());
             }
         }
-        codeArea.update(codeArea.getGraphics());
     }
 
     public void
@@ -404,6 +411,11 @@ OnTimeout, KeyListener, CaretListener, ActionListener
             keyPressed = "req/"+appName;
         }else if (e.getSource() == done) {
             keyPressed = "done";
+            codeArea.setEditable(false);
+            codeArea.removeCaretListener(this);
+            codeArea.getCaret().setVisible(true);
+            req.setEnabled(true);
+            done.setEnabled(false);
         } else if (e.getSource() == exit)
         {
             System.exit(0);
